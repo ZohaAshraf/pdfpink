@@ -222,7 +222,6 @@ function Modal({ tool, onClose }) {
               <div style={{fontSize:60,marginBottom:8,animation:"pop 0.4s cubic-bezier(.34,1.56,.64,1)"}}>🎉</div>
               <h3 style={{margin:"0 0 6px",fontSize:22,fontWeight:900,color:"#be185d",fontFamily:"'Cormorant Garamond',serif"}}>Conversion Complete!</h3>
               <p style={{color:"#9ca3af",fontSize:13,margin:"0 0 4px"}}>Your <strong>.{tool.ext}</strong> file is ready.</p>
-              <p style={{color:"#f9a8d4",fontSize:11,margin:"0 0 20px"}}>⚠️ Demo UI — connect a real backend to enable actual file conversion.</p>
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 <a href="/" onClick={(e)=>e.preventDefault()} style={{
                   display:"flex",alignItems:"center",justifyContent:"center",gap:10,
