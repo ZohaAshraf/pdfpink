@@ -175,7 +175,7 @@ function Modal({ tool, onClose }) {
               <p style={{color:"#9ca3af",fontSize:13,margin:"0 0 4px"}}>Your <strong>.{tool.ext}</strong> file is ready.</p>
               <p style={{color:"#f9a8d4",fontSize:11,margin:"0 0 20px"}}>⚠️ Demo UI — connect a real backend to enable actual file conversion.</p>
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                <a href="#" onClick={(e)=>e.preventDefault()} style={{
+                <a href="/" onClick={(e)=>e.preventDefault()} style={{
                   display:"flex",alignItems:"center",justifyContent:"center",gap:10,
                   background:`linear-gradient(135deg,${tool.color},#f472b6)`,
                   color:"#fff",padding:"14px 32px",borderRadius:14,
@@ -183,8 +183,8 @@ function Modal({ tool, onClose }) {
                   boxShadow:`0 10px 28px ${tool.color}55`
                 }}>⬇️ Download .{tool.ext}</a>
                 <div style={{display:"flex",gap:8}}>
-                  <a href="#" onClick={(e)=>e.preventDefault()} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 0",fontSize:12,fontWeight:700,color:"#374151",textDecoration:"none"}}>☁️ Google Drive</a>
-                  <a href="#" onClick={(e)=>e.preventDefault()} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 0",fontSize:12,fontWeight:700,color:"#374151",textDecoration:"none"}}>📧 Email Link</a>
+                  <a href="/" onClick={(e)=>e.preventDefault()} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 0",fontSize:12,fontWeight:700,color:"#374151",textDecoration:"none"}}>☁️ Google Drive</a>
+                  <a href="/" onClick={(e)=>e.preventDefault()} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 0",fontSize:12,fontWeight:700,color:"#374151",textDecoration:"none"}}>📧 Email Link</a>
                 </div>
               </div>
               <button onClick={()=>{setFile(null);setPhase("idle");setProg(0);}} style={{background:"none",border:"none",color:tool.color,cursor:"pointer",fontSize:13,fontWeight:700,marginTop:12,textDecoration:"underline"}}>
@@ -547,7 +547,7 @@ export default function App() {
                 <div>
                   <div style={{fontWeight:800,fontSize:11,color:T.text,marginBottom:12,textTransform:"uppercase",letterSpacing:1.2}}>Company</div>
                   {["About","Privacy Policy","Terms of Service","Contact Us","API Docs","Blog"].map(l=>(
-                    <div key={l} style={{marginBottom:8}}><a href="#" onClick={e=>e.preventDefault()} style={{color:T.sub,fontSize:12,textDecoration:"none",fontWeight:500}}>{l}</a></div>
+                    <div key={l} style={{marginBottom:8}}><a href="/" onClick={e=>e.preventDefault()} style={{color:T.sub,fontSize:12,textDecoration:"none",fontWeight:500}}>{l}</a></div>
                   ))}
                 </div>
               </div>
