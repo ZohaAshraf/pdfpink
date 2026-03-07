@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-
+const CLOUDCONVERT_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiNzM5OTA2Y2E3MDg4NTUyN2ZkZWJlM2NiNTExNmE5YzBjZDVhMzBjN2FiZjAyNmIxY2YyOTZhOWY4MGRhYjM4NjkzNDhlN2RmMDg4YmUyZDYiLCJpYXQiOjE3NzI4OTk5NTIuNTQwOTA4LCJuYmYiOjE3NzI4OTk5NTIuNTQwOTA5LCJleHAiOjQ5Mjg1NzM1NTIuNTM1MzM5LCJzdWIiOiI3NDYwNjAyNCIsInNjb3BlcyI6W119.Y1x4WZwY1GT23WKdTx0_QjgEIh2XcTncMX9by4OecGxUc1H6XntnesSQmbbxXXG2o0_zJcDJ-pEZlrZnxihUd0O5nFwyQe7-9fWL3qisAl-nlkm1C6dZy3KJFZFn3NpZlTK_ctOOpvSn5nx9TDPUUXcIUxtvdSWF7q4BOB8ou9hVF7yeIskN-WpI4jnaFR2mlrfLNwzIAhUiZ5eZ-zApwMFbBJ2VG57KVf3bL7pJID6qInuqFtADK6Is7-_uVMHyHDjkfr66w7YoHd1jqDdoFDOqFt9ZmN6T5NZQiKnjG7Er_-bJgKnQM0AEudcxji9utMIX8IBJeIttGhchDgFehH6c1hc0rLGFbC3w_DjZ6HSqf6rDOrXJUHqGtBQsUSUKgCmUuepfFZ-hUASS0TylmPhVMORVdsMTO4kC3PYQ2b91_DVWvY0f5FFoFzjGubVOZYEWCrtHBs7lSVHiwNGHwTb5kJ2t2C62N2H7kmp5mJk-bvgLYopL_2Wd-0LfgNohogn8aM-s8qijm28B7BjjWVEmasxp4GW2rdKXYGwGklO7XNZItwSy8iIcfKRqxVyqc7RaIEEGF1vQKvARR5Sr1iEPUf4-s1r1I2TydoA4p7E76agS87sKVSFwXoypuIg0OS5dctQqAkWJPVbU-1Us20asJyWEIAKf6A4r-tGsrO4";
 /* ─── DATA ──────────────────────────────────────────────────── */
 const TOOLS = [
   { id:"pdf-word",  from:"PDF",  to:"WORD", ext:"docx", icon:"📄", label:"PDF to Word",        accept:".pdf",              color:"#be185d", light:"#fdf2f8", desc:"Turn any PDF into a fully editable Word document in seconds." },
@@ -75,15 +75,64 @@ function Modal({ tool, onClose }) {
   const pick = (f) => { if (f) { setFile(f); setPhase("idle"); } };
   const onDrop = useCallback((e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files[0]); }, []);
 
-  const convert = () => {
+  const convert = async () => {
     if (!file) return;
     setPhase("converting"); setProg(0);
-    let p = 0;
-    const iv = setInterval(() => {
-      p += Math.random() * 14 + 4;
-      if (p >= 100) { p = 100; clearInterval(iv); setPhase("done"); }
-      setProg(Math.min(p, 100));
-    }, 200);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("outputformat", tool.ext);
+      setProg(30);
+      const uploadRes = await fetch("https://api.cloudconvert.com/v2/jobs", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${CLOUDCONVERT_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          tasks: {
+            "upload-file": { operation: "import/upload" },
+            "convert-file": {
+              operation: "convert",
+              input: "upload-file",
+              output_format: tool.ext
+            },
+            "export-file": {
+              operation: "export/url",
+              input: "convert-file"
+            }
+          }
+        })
+      });
+      const job = await uploadRes.json();
+      const uploadTask = job.data.tasks.find(t => t.name === "upload-file");
+      setProg(50);
+      const uploadForm = new FormData();
+      Object.entries(uploadTask.result.form.parameters).forEach(([k,v]) => uploadForm.append(k, v));
+      uploadForm.append("file", file);
+      await fetch(uploadTask.result.form.url, { method: "POST", body: uploadForm });
+      setProg(70);
+      let exportTask = null;
+      while (!exportTask?.result?.files) {
+        await new Promise(r => setTimeout(r, 2000));
+        const statusRes = await fetch(`https://api.cloudconvert.com/v2/jobs/${job.data.id}`, {
+          headers: { "Authorization": `Bearer ${CLOUDCONVERT_API_KEY}` }
+        });
+        const status = await statusRes.json();
+        exportTask = status.data.tasks.find(t => t.name === "export-file");
+        setProg(85);
+      }
+      setProg(100);
+      const fileUrl = exportTask.result.files[0].url;
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = `converted.${tool.ext}`;
+      link.click();
+      setPhase("done");
+    } catch(err) {
+      console.error(err);
+      setPhase("done");
+    }
   };
 
   const statusLabel =
