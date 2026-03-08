@@ -114,7 +114,7 @@ const convert = async () => {
       while (!exportTask?.result?.files) {
         await new Promise(r => setTimeout(r, 2000));
         const statusRes = await fetch(`https://api.cloudconvert.com/v2/jobs/${job.data.id}`, {
-          headers: { "Authorization": `Bearer ${CLOUDCONVERT_API_KEY}` }
+          headers: { "Authorization": `Bearer ${CONVERTAPI_SECRET}` }
         });
         const status = await statusRes.json();
         exportTask = status.data.tasks.find(t => t.name === "export-file");
