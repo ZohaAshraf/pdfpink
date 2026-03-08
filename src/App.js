@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-const CLOUDCONVERT_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiNzM5OTA2Y2E3MDg4NTUyN2ZkZWJlM2NiNTExNmE5YzBjZDVhMzBjN2FiZjAyNmIxY2YyOTZhOWY4MGRhYjM4NjkzNDhlN2RmMDg4YmUyZDYiLCJpYXQiOjE3NzI4OTk5NTIuNTQwOTA4LCJuYmYiOjE3NzI4OTk5NTIuNTQwOTA5LCJleHAiOjQ5Mjg1NzM1NTIuNTM1MzM5LCJzdWIiOiI3NDYwNjAyNCIsInNjb3BlcyI6W119.Y1x4WZwY1GT23WKdTx0_QjgEIh2XcTncMX9by4OecGxUc1H6XntnesSQmbbxXXG2o0_zJcDJ-pEZlrZnxihUd0O5nFwyQe7-9fWL3qisAl-nlkm1C6dZy3KJFZFn3NpZlTK_ctOOpvSn5nx9TDPUUXcIUxtvdSWF7q4BOB8ou9hVF7yeIskN-WpI4jnaFR2mlrfLNwzIAhUiZ5eZ-zApwMFbBJ2VG57KVf3bL7pJID6qInuqFtADK6Is7-_uVMHyHDjkfr66w7YoHd1jqDdoFDOqFt9ZmN6T5NZQiKnjG7Er_-bJgKnQM0AEudcxji9utMIX8IBJeIttGhchDgFehH6c1hc0rLGFbC3w_DjZ6HSqf6rDOrXJUHqGtBQsUSUKgCmUuepfFZ-hUASS0TylmPhVMORVdsMTO4kC3PYQ2b91_DVWvY0f5FFoFzjGubVOZYEWCrtHBs7lSVHiwNGHwTb5kJ2t2C62N2H7kmp5mJk-bvgLYopL_2Wd-0LfgNohogn8aM-s8qijm28B7BjjWVEmasxp4GW2rdKXYGwGklO7XNZItwSy8iIcfKRqxVyqc7RaIEEGF1vQKvARR5Sr1iEPUf4-s1r1I2TydoA4p7E76agS87sKVSFwXoypuIg0OS5dctQqAkWJPVbU-1Us20asJyWEIAKf6A4r-tGsrO4";
+const CONVERTAPI_SECRET = "OgaUZH7fsXHHklAyxXCBTb3uHFZB5svx";
 /* ─── DATA ──────────────────────────────────────────────────── */
 const TOOLS = [
   { id:"pdf-word",  from:"PDF",  to:"WORD", ext:"docx", icon:"📄", label:"PDF to Word",        accept:".pdf",              color:"#be185d", light:"#fdf2f8", desc:"Turn any PDF into a fully editable Word document in seconds." },
@@ -75,35 +75,33 @@ function Modal({ tool, onClose }) {
   const pick = (f) => { if (f) { setFile(f); setPhase("idle"); } };
   const onDrop = useCallback((e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files[0]); }, []);
 
-  const convert = async () => {
-    if (!file) return;
-    setPhase("converting"); setProg(0);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("outputformat", tool.ext);
-      setProg(30);
-      const uploadRes = await fetch("https://api.cloudconvert.com/v2/jobs", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${CLOUDCONVERT_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          tasks: {
-            "upload-file": { operation: "import/upload" },
-            "convert-file": {
-              operation: "convert",
-              input: "upload-file",
-              output_format: tool.ext
-            },
-            "export-file": {
-              operation: "export/url",
-              input: "convert-file"
-            }
-          }
-        })
-      });
+const convert = async () => {
+  if (!file) return;
+  setPhase("converting"); setProg(0);
+  try {
+    setProg(30);
+    const formData = new FormData();
+    formData.append("File", file);
+    setProg(60);
+    const res = await fetch(
+      `https://v2.convertapi.com/convert/${tool.from.toLowerCase()}/to/${tool.ext}?Secret=${CONVERTAPI_SECRET}`,
+      { method:"POST", body:formData }
+    );
+    const data = await res.json();
+    setProg(90);
+    const base64 = data.Files[0].FileData;
+    const blob = new Blob(
+      [Uint8Array.from(atob(base64), c=>c.charCodeAt(0))],
+      { type:"application/octet-stream" }
+    );
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `converted.${tool.ext}`;
+    a.click();
+    setProg(100);
+    setPhase("done");
+  } catch(e) { console.error(e); setPhase("done"); }
+};
       const job = await uploadRes.json();
       const uploadTask = job.data.tasks.find(t => t.name === "upload-file");
       setProg(50);
